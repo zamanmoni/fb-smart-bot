@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FB Smart Comment Auto-Replier — Step 3</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+    }
+    .mobile-frame-mode {
+      max-width: 420px !important;
+      margin: 1rem auto !important;
+      border: 8px solid #1e293b;
+      border-radius: 2.25rem;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+      overflow: hidden;
+      background: #f8fafc;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <div id="appRootWrapper" class="transition-all duration-300">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+            f
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="font-bold text-lg text-slate-900">স্মার্ট কমেন্ট রিপ্লাই বট</h1>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">ধাপ ৪ (চূড়ান্ত): ফেসবুক পেজ সংযোগ ও রেডিমেড সার্ভার কোড</span>
+            </div>
+            <p class="text-xs text-slate-500">একাধিক প্রশ্ন শনাক্তকরণ, প্রাইভেট মেসেজ (DM) ও মোবাইল অ্যাপ সেভিং</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="toggleMobileViewBtn" type="button" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            📱 <span>মোবাইল অ্যাপ ভিউ</span>
+          </button>
+
+          <label class="flex items-center gap-1.5 cursor-pointer select-none bg-slate-100 hover:bg-slate-200/70 px-2.5 py-1.5 rounded-lg transition">
+            <input type="checkbox" id="autoReplyToggle" checked class="w-4 h-4 accent-blue-600 rounded cursor-pointer" />
+            <span class="text-xs font-medium text-slate-700">অটো-রিপ্লাই</span>
+          </label>
+
+          <label class="flex items-center gap-1.5 cursor-pointer select-none bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1.5 rounded-lg border border-indigo-200 transition">
+            <input type="checkbox" id="autoDmToggle" checked class="w-4 h-4 accent-indigo-600 rounded cursor-pointer" />
+            <span class="text-xs font-medium text-indigo-700">অটো-ইনবক্স (DM)</span>
+          </label>
+
+          <div class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg font-medium">
+            মোট রিপ্লাই: <span id="replyCounter" class="font-bold">3</span> | DM: <span id="dmCounter" class="font-bold">3</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Save Status Toast Banner -->
+    <div id="saveToast" class="hidden fixed bottom-4 right-4 z-50 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <span id="saveToastText">সেটিংস অটো-সেভ হয়েছে!</span>
+    </div>
+
+    <!-- Main Content -->
+    <main id="mainGrid" class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Simulator & Comment Feed (7 cols) -->
+      <section id="leftCol" class="lg:col-span-7 space-y-5">
+
+        <!-- Simulated Facebook Post Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <!-- Post Header -->
+          <div class="p-4 flex items-center justify-between border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold">
+                M
+              </div>
+              <div>
+                <h2 class="font-semibold text-sm text-slate-900">Moni Tech & Gadget BD</h2>
+                <p class="text-xs text-slate-400">স্পন্সরড • পাবলিক পোস্ট</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span id="activeToneChip" class="text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-md">
+                টোন: 😊 বন্ধুসুলভ
+              </span>
+            </div>
+          </div>
+
+          <!-- Live Dynamic Post Body synced with Product Knowledge -->
+          <div class="p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span id="postStockBadge" class="inline-block text-[11px] uppercase tracking-wider bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">স্টকে আছে</span>
+              <span id="postPriceBadge" class="text-xs font-bold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full">অফার প্রাইস: ৮৫০ টাকা</span>
+            </div>
+            <h3 id="postProductTitle" class="text-lg font-bold mb-1">প্রিমিয়াম ওয়্যারলেস নেকব্যান্ড Pro</h3>
+            <p id="postProductOffer" class="text-sm text-slate-300 leading-relaxed">
+              সারাদেশে ক্যাশ অন ডেলিভারি সুবিধা (ঢাকায় ৬০ টাকা, ঢাকার বাইরে ১২০ টাকা)। কমেন্টে আপনার প্রশ্ন লিখুন—আমাদের স্মার্ট বট আপনার নাম ধরে সাথে সাথে উত্তর ও ইনবক্স মেসেজ পাঠাবে!
+            </p>
+          </div>
+
+          <!-- Quick Sample Comment Presets (Including Multi-Question & Angry/Urgent) -->
+          <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+            <p class="text-xs font-semibold text-slate-500 mb-2">এক ক্লিকে টেস্ট করুন (নমুনা কমেন্ট ও মাল্টি-প্রশ্ন):</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" data-sample="ভাই এটার দাম কত আর ঢাকার বাইরে ডেলিভারি চার্জ কত?" class="sample-btn text-xs bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-1.5 rounded-lg transition font-medium">
+                🔥 জোড়া প্রশ্ন: "দাম কত + ডেলিভারি চার্জ কত?"
+              </button>
+              <button type="button" data-sample="ভাই এটার দাম কত? Price plz" class="sample-btn text-xs bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition">
+                💰 "এটার দাম কত?"
+              </button>
+              <button type="button" data-sample="ঢাকার বাইরে ডেলিভারি চার্জ কত আর কয়দিনে পাবো?" class="sample-btn text-xs bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition">
+                🚚 "ডেলিভারি চার্জ কত?"
+              </button>
+              <button type="button" data-sample="কিভাবে অর্ডার করবো ভাইয়া?" class="sample-btn text-xs bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition">
+                🛒 "কিভাবে অর্ডার করবো?"
+              </button>
+              <button type="button" data-sample="প্রোডাক্টটা স্টকে আছে কি? কালার কি কি?" class="sample-btn text-xs bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition">
+                📦 "স্টকে আছে কি?"
+              </button>
+              <button type="button" data-sample="প্রোডাক্টটা নষ্ট বা ভাঙ্গা পেলে চেঞ্জ করা যাবে?" class="sample-btn text-xs bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition">
+                ⚠️ "নষ্ট পেলে চেঞ্জ হবে?"
+              </button>
+              <button type="button" data-sample="আপনাদের শোরুম বা দোকান কোথায়?" class="sample-btn text-xs bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition">
+                📍 "শোরুম কোথায়?"
+              </button>
+              <button type="button" data-sample="এত লেট কেন? এখনো পার্সেল পেলাম না, খুব বাজে সার্ভিস!" class="sample-btn text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1.5 rounded-lg transition font-medium">
+                😡 রাগী কমেন্ট টেস্ট
+              </button>
+            </div>
+          </div>
+
+          <!-- New Comment Input Form with Customer Name -->
+          <form id="commentForm" class="p-4 border-b border-slate-200 bg-white space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label for="customerNameInput" class="block text-[11px] font-semibold text-slate-600 mb-1">কাস্টমারের নাম:</label>
+                <input
+                  id="customerNameInput"
+                  type="text"
+                  value="আরিফ হোসেন"
+                  placeholder="নাম লিখুন"
+                  class="w-full text-sm rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div class="sm:col-span-2">
+                <label for="commentInput" class="block text-[11px] font-semibold text-slate-600 mb-1">কাস্টমারের কমেন্ট (একাধিক প্রশ্নও লিখতে পারেন):</label>
+                <div class="flex gap-2">
+                  <input
+                    id="commentInput"
+                    type="text"
+                    placeholder="যেমন: ভাই দাম কত আর ডেলিভারি চার্জ কত?"
+                    class="flex-1 text-sm rounded-xl border border-slate-300 px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-xl transition shadow-sm whitespace-nowrap"
+                  >
+                    কমেন্ট করুন
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Comments Feed -->
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">কমেন্ট, স্মার্ট রিপ্লাই ও অটো-ইনবক্স ফিড</h4>
+              <button id="clearFeedBtn" type="button" class="text-xs text-slate-400 hover:text-rose-600 transition">ফিড রিসেট করুন</button>
+            </div>
+            <div id="commentsList" class="space-y-4"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Column: Step 3 Brain Controls + PWA Guide (5 cols) -->
+      <aside id="rightCol" class="lg:col-span-5 space-y-5">
+
+        <!-- Control Tabs Header -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="grid grid-cols-2 sm:grid-cols-5 border-b border-slate-200 bg-slate-50 text-[11px] font-semibold">
+            <button type="button" data-tab="product" class="tab-btn py-2.5 px-1 border-b-2 border-transparent text-slate-600 hover:text-slate-900">
+              📦 পণ্যের তথ্য
+            </button>
+            <button type="button" data-tab="tone" class="tab-btn py-2.5 px-1 border-b-2 border-transparent text-slate-600 hover:text-slate-900">
+              🎭 উত্তরের টোন
+            </button>
+            <button type="button" data-tab="rules" class="tab-btn py-2.5 px-1 border-b-2 border-transparent text-slate-600 hover:text-slate-900">
+              ➕ কাস্টম রুলস
+            </button>
+            <button type="button" data-tab="mobile" class="tab-btn py-2.5 px-1 border-b-2 border-transparent text-slate-600 hover:text-slate-900">
+              📲 ফোন অ্যাপ
+            </button>
+            <button type="button" data-tab="connect" class="tab-btn py-2.5 px-1 border-b-2 border-blue-600 text-blue-600 bg-white">
+              🔌 পেজ সংযোগ
+            </button>
+          </div>
+
+          <!-- TAB 1: Product Knowledge Box -->
+          <div id="tab-product" class="tab-panel hidden p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-sm text-slate-900">স্মার্ট প্রোডাক্ট নলেজ বক্স</h3>
+              <span class="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium">অটো-সেভ চালু</span>
+            </div>
+            <p class="text-xs text-slate-500">
+              এখানে পণ্যের তথ্য বদলে দিলে তা আপনার ব্রাউজারে সেভ হয়ে থাকবে এবং বট নতুন তথ্যে উত্তর ও ইনবক্স মেসেজ পাঠাবে।
+            </p>
+
+            <div class="space-y-2.5">
+              <div>
+                <label for="prodName" class="block text-xs font-semibold text-slate-700 mb-1">পণ্যের নাম:</label>
+                <input id="prodName" type="text" value="প্রিমিয়াম ওয়্যারলেস নেকব্যান্ড Pro" class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label for="prodPrice" class="block text-xs font-semibold text-slate-700 mb-1">অফার প্রাইস (টাকা):</label>
+                  <input id="prodPrice" type="text" value="৮৫০ টাকা" class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label for="prodStock" class="block text-xs font-semibold text-slate-700 mb-1">স্টক স্ট্যাটাস:</label>
+                  <select id="prodStock" class="w-full text-xs rounded-lg border border-slate-300 px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="স্টকে আছে (কালো ও নীল কালার)">স্টকে আছে (কালো ও নীল)</option>
+                    <option value="সীমিত স্টক (মাত্র ৫টি বাকি)">সীমিত স্টক (মাত্র ৫টি বাকি)</option>
+                    <option value="প্রি-অর্ডার চলছে">প্রি-অর্ডার চলছে</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label for="prodInsideDhaka" class="block text-xs font-semibold text-slate-700 mb-1">ঢাকার ভেতরে ডেলিভারি:</label>
+                  <input id="prodInsideDhaka" type="text" value="৬০ টাকা (১-২ দিন)" class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label for="prodOutsideDhaka" class="block text-xs font-semibold text-slate-700 mb-1">ঢাকার বাইরে ডেলিভারি:</label>
+                  <input id="prodOutsideDhaka" type="text" value="১২০ টাকা (২-৩ দিন)" class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+
+              <div>
+                <label for="prodBonus" class="block text-xs font-semibold text-slate-700 mb-1">বিশেষ অফার / ওয়ারেন্টি নোট:</label>
+                <input id="prodBonus" type="text" value="৭ দিনের রিপ্লেসমেন্ট গ্যারান্টি ও ক্যাশ অন ডেলিভারি" class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Tone Selector -->
+          <div id="tab-tone" class="tab-panel hidden p-4 space-y-3">
+            <h3 class="font-bold text-sm text-slate-900">বটের কথা বলার ধরন (Reply Tone)</h3>
+            <p class="text-xs text-slate-500">
+              আপনার পেজের ব্র্যান্ডিং অনুযায়ী বট কীভাবে কাস্টমারের সাথে কথা বলবে তা বেছে নিন:
+            </p>
+
+            <div class="space-y-2.5" id="toneOptionsContainer">
+              <label class="flex items-start gap-3 p-3 rounded-xl border border-blue-500 bg-blue-50/40 cursor-pointer transition tone-card" data-tone-card="friendly">
+                <input type="radio" name="botTone" value="friendly" checked class="mt-1 accent-blue-600" />
+                <div>
+                  <div class="font-bold text-xs text-slate-900">😊 বন্ধুসুলভ ও আন্তরিক (Friendly)</div>
+                  <p class="text-[11px] text-slate-600 mt-0.5">কাস্টমারকে নাম ধরে সম্বোধন করবে এবং ইমোজি দিয়ে আন্তরিকভাবে উত্তর দেবে।</p>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition tone-card" data-tone-card="formal">
+                <input type="radio" name="botTone" value="formal" class="mt-1 accent-blue-600" />
+                <div>
+                  <div class="font-bold text-xs text-slate-900">👔 প্রফেশনাল ও ফরমাল (Formal)</div>
+                  <p class="text-[11px] text-slate-600 mt-0.5">মার্জিত ও কর্পোরেট ভাষায় সংক্ষিপ্ত এবং স্পষ্ট তথ্য দেবে।</p>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition tone-card" data-tone-card="sales">
+                <input type="radio" name="botTone" value="sales" class="mt-1 accent-blue-600" />
+                <div>
+                  <div class="font-bold text-xs text-slate-900">🔥 আকর্ষণীয় সেলস টোন (Urgent Sales)</div>
+                  <p class="text-[11px] text-slate-600 mt-0.5">অফার ও সীমিত স্টকের কথা মনে করিয়ে দ্রুত অর্ডার করতে উৎসাহিত করবে।</p>
+                </div>
+              </label>
+            </div>
+
+            <div class="bg-slate-100 rounded-xl p-3 text-xs text-slate-700 space-y-1">
+              <div class="font-semibold text-slate-900">লাইভ টোন প্রিভিউ (দাম জানতে চাইলে):</div>
+              <p id="toneLivePreviewText" class="text-xs text-slate-600 italic"></p>
+            </div>
+          </div>
+
+          <!-- TAB 3: Custom Rule Maker + Existing Rules -->
+          <div id="tab-rules" class="tab-panel hidden p-4 space-y-4">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 mb-1">নতুন কাস্টম রুল যোগ করুন</h3>
+              <p class="text-xs text-slate-500 mb-3">
+                নতুন কোনো প্রশ্নের ধরন (যেমন: "কালার", "ব্যাটারি ব্যাকআপ", বা "ডিসকাউন্ট") যোগ করুন:
+              </p>
+              <form id="addRuleForm" class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div>
+                  <label for="newRuleLabel" class="block text-[11px] font-semibold text-slate-700 mb-1">ক্যাটাগরির নাম:</label>
+                  <input id="newRuleLabel" type="text" placeholder="যেমন: 🔋 ব্যাটারি ব্যাকআপ (Battery)" required class="w-full text-xs rounded-lg border border-slate-300 px-2.5 py-1.5 bg-white" />
+                </div>
+                <div>
+                  <label for="newRuleKeywords" class="block text-[11px] font-semibold text-slate-700 mb-1">শনাক্তকারী শব্দ (কমা দিয়ে লিখুন):</label>
+                  <input id="newRuleKeywords" type="text" placeholder="যেমন: ব্যাটারি, চার্জ কতক্ষণ, ব্যাকআপ, battery" required class="w-full text-xs rounded-lg border border-slate-300 px-2.5 py-1.5 bg-white" />
+                </div>
+                <div>
+                  <label for="newRuleReply" class="block text-[11px] font-semibold text-slate-700 mb-1">বটের উত্তর (<code class="text-blue-600">{name}</code> বা <code class="text-blue-600">{price}</code> ব্যবহার করতে পারেন):</label>
+                  <textarea id="newRuleReply" rows="2" placeholder="যেমন: প্রিয় {name}, একবার ফুল চার্জে টানা ২৪ ঘণ্টা ব্যাটারি ব্যাকআপ পাবেন!" required class="w-full text-xs rounded-lg border border-slate-300 p-2 bg-white"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 rounded-lg transition">
+                  + নতুন রুল যোগ করুন
+                </button>
+              </form>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-bold text-slate-700">বর্তমান রুলস তালিকা</h4>
+                <span id="ruleCountBadge" class="text-[11px] text-slate-500">৬টি রুল সক্রিয়</span>
+              </div>
+              <div id="rulesContainer" class="space-y-2.5 max-h-[260px] overflow-y-auto pr-1"></div>
+            </div>
+          </div>
+
+          <!-- TAB 4: Mobile App & Backup Settings -->
+          <div id="tab-mobile" class="tab-panel hidden p-4 space-y-3">
+            <h3 class="font-bold text-sm text-slate-900">ফোনে ইন্সটল ও ডেটা ব্যাকআপ</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              আপনার করা সব পরিবর্তন (পণ্যের নাম, দাম, কাস্টম রুলস) ফোনের মেমোরিতে (`localStorage`) স্বয়ংক্রিয়ভাবে সেভ থাকে।
+            </p>
+
+            <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-3 space-y-2 text-xs text-slate-700">
+              <div class="font-bold text-blue-900">📲 ফোনে ইন্সটল করার নিয়ম (PWA):</div>
+              <ol class="list-decimal list-inside space-y-1 text-[11px]">
+                <li>অ্যাপটি আপনার ডোমেইন বা Vercel-এ আপলোড করুন।</li>
+                <li>ফোনের <strong>Chrome</strong> ব্রাউজারে লিংকটি ওপেন করুন।</li>
+                <li>উপরে ডান পাশের <strong>⋮ (Three Dots)</strong> মেনুতে ট্যাপ করে <strong>"Add to Home screen" / "Install app"</strong> চাপুন।</li>
+              </ol>
+            </div>
+
+            <div class="pt-2 flex flex-col gap-2">
+              <button id="exportConfigBtn" type="button" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-2.5 rounded-xl transition">
+                📥 বটের কনফিগারেশন কপি করুন (JSON Backup)
+              </button>
+              <button id="resetSavedConfigBtn" type="button" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs py-2 rounded-xl transition">
+                🔄 ডিফল্ট সেটিংসে রিসেট করুন
+              </button>
+            </div>
+            <pre id="exportedJsonBox" class="hidden text-[10px] bg-slate-900 text-emerald-300 p-3 rounded-xl overflow-x-auto max-h-40"></pre>
+          </div>
+
+          <!-- TAB 5: Live Facebook Page Webhook & Vercel Code Generator -->
+          <div id="tab-connect" class="tab-panel p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-sm text-slate-900">আসল ফেসবুক পেজে যুক্ত করার জেনারেটর</h3>
+              <span class="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-semibold">Vercel রেডি</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              আপনার অ্যাপে সাজানো পণ্যের তথ্য, টোন এবং কাস্টম রুলস দিয়ে স্বয়ংক্রিয়ভাবে একটি <strong>Vercel Serverless Webhook (`api/webhook.js`)</strong> তৈরি করুন:
+            </p>
+
+            <div class="space-y-2">
+              <div>
+                <label for="fbVerifyTokenInput" class="block text-[11px] font-semibold text-slate-700 mb-1">১. আপনার কাস্টম Verify Token (যেকোনো গোপন শব্দ):</label>
+                <input id="fbVerifyTokenInput" type="text" value="moni_secret_verify_2026" class="w-full text-xs rounded-lg border border-slate-300 px-2.5 py-1.5 bg-white" />
+              </div>
+              <div>
+                <label for="fbPageTokenInput" class="block text-[11px] font-semibold text-slate-700 mb-1">২. পেজ অ্যাক্সেস টোকেন (Meta Developer থেকে পাওয়া):</label>
+                <input id="fbPageTokenInput" type="text" value="EAABsbCS1iHgBO_YOUR_PAGE_ACCESS_TOKEN" class="w-full text-xs rounded-lg border border-slate-300 px-2.5 py-1.5 bg-white font-mono" />
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button id="generateWebhookBtn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 rounded-xl transition shadow-sm">
+                ⚡ আমার রুলস দিয়ে সার্ভার কোড তৈরি করুন
+              </button>
+              <button id="copyWebhookBtn" type="button" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3 py-2.5 rounded-xl transition">
+                📋 কপি
+              </button>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                <span class="font-semibold text-slate-700">ফাইল: <code>api/webhook.js</code> (Vercel-এ আপলোডের জন্য)</span>
+                <span id="webhookCopyStatus" class="text-emerald-600 font-semibold"></span>
+              </div>
+              <pre id="webhookCodeOutput" class="text-[10px] bg-slate-900 text-sky-300 p-3 rounded-xl overflow-x-auto max-h-48 font-mono leading-relaxed"></pre>
+            </div>
+
+            <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 space-y-1.5 text-[11px] text-slate-700">
+              <div class="font-bold text-amber-900">🚀 ৩টি সহজ ধাপে ফেসবুক পেজে লাইভ করার নিয়ম:</div>
+              <p><strong>ধাপ ক:</strong> উপরের কোডটি আপনার Vercel প্রজেক্টের <code>api/webhook.js</code> ফাইলে পেস্ট করে ডিপ্লয় করুন।</p>
+              <p><strong>ধাপ খ:</strong> Meta for Developers সাইটে একটি Business App খুলে <strong>Webhooks (Page → feed)</strong> অপশনে আপনার Vercel লিংক (<code>https://আপনার-সাইট/api/webhook</code>) এবং Verify Token দিন।</p>
+              <p><strong>ধাপ গ:</strong> পেজের <code>pages_manage_engagement</code> পারমিশন অন করলেই আপনার পেজের সব নতুন কমেন্টে এই বট ২৪ ঘণ্টা স্বয়ংক্রিয়ভাবে উত্তর দেবে!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 Architecture Explainer Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+              ধাপ ৩-এ বট কীভাবে আরও স্মার্ট হলো?
+            </h3>
+            <span id="lastDetectedBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+              প্রস্তুত
+            </span>
+          </div>
+          <ul class="text-xs space-y-2 text-slate-700">
+            <li class="flex items-start gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+              <span class="font-bold text-purple-600">১. মাল্টি-কোশ্চেন কম্বাইনার:</span>
+              <span>একই কমেন্টে দাম ও ডেলিভারি দুটোই জানতে চাইলে বট দুটি উত্তর জোড়া লাগিয়ে একসাথে পূর্ণাঙ্গ উত্তর দেয়।</span>
+            </li>
+            <li class="flex items-start gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+              <span class="font-bold text-purple-600">২. সেন্টিমেন্ট ও রাগী কমেন্ট গার্ড:</span>
+              <span>কাস্টমার ক্ষোভ বা অভিযোগ প্রকাশ করলে বট সেলস টোন বাদ দিয়ে সাথে সাথে সহানুভূতিশীল সাপোর্ট উত্তর দেয়।</span>
+            </li>
+            <li class="flex items-start gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+              <span class="font-bold text-purple-600">৩. অটো-ইনবক্স (Private DM):</span>
+              <span>পাবলিক কমেন্টের পাশাপাশি কাস্টমারের মেসেঞ্জারে অর্ডার ফর্ম ও অফার লিংকসহ প্রাইভেট মেসেজ পাঠায়।</span>
+            </li>
+          </ul>
+        </div>
+
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'moni_fb_smart_replier_v3';
+
+    // --- DEFAULT STATE ---
+    const defaultProductState = {
+      name: 'প্রিমিয়াম ওয়্যারলেস নেকব্যান্ড Pro',
+      price: '৮৫০ টাকা',
+      stock: 'স্টকে আছে (কালো ও নীল কালার)',
+      insideDhaka: '৬০ টাকা (১-২ দিন)',
+      outsideDhaka: '১২০ টাকা (২-৩ দিন)',
+      bonus: '৭ দিনের রিপ্লেসমেন্ট গ্যারান্টি ও ক্যাশ অন ডেলিভারি',
+      tone: 'friendly'
+    };
+
+    const initialRules = [
+      {
+        id: 'price',
+        label: '💰 দাম (Price)',
+        badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+        keywords: ['দাম', 'কত', 'প্রাইস', 'price', 'rate', 'tk', 'টাকা', 'হাদিয়া', 'মুল্য', 'মূল্য'],
+        template: '{product}-এর বর্তমান অফার প্রাইস মাত্র {price} (সাথে {bonus})।'
+      },
+      {
+        id: 'delivery',
+        label: '🚚 ডেলিভারি (Delivery)',
+        badgeColor: 'bg-sky-50 text-sky-800 border-sky-200',
+        keywords: ['ডেলিভারি', 'চার্জ', 'কুরিয়ার', 'পাঠানো', 'কয়দিন', 'কবে পাবো', 'delivery', 'charge', 'courier'],
+        template: 'ঢাকার ভেতরে ডেলিভারি চার্জ {insideDhaka} এবং ঢাকার বাইরে {outsideDhaka}।'
+      },
+      {
+        id: 'stock',
+        label: '📦 স্টক ও কালার (Stock)',
+        badgeColor: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+        keywords: ['স্টক', 'আছে কি', 'কালার', 'রঙ', 'পাওয়া যাবে', 'available', 'stock', 'color'],
+        template: 'হ্যাঁ, আমাদের {product} বর্তমানে {stock}।'
+      },
+      {
+        id: 'order',
+        label: '🛒 অর্ডার নিয়ম (Order)',
+        badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        keywords: ['অর্ডার', 'নিতে চাই', 'কিনবো', 'কিভাবে', 'লাগবে', 'order', 'buy', 'inbox'],
+        template: 'অর্ডার করতে আপনার নাম, ঠিকানা ও মোবাইল নম্বর আমাদের ইনবক্স করুন। পণ্য হাতে পেয়ে টাকা পরিশোধ করবেন!'
+      },
+      {
+        id: 'complaint',
+        label: '⚠️ ওয়ারেন্টি (Warranty)',
+        badgeColor: 'bg-rose-50 text-rose-800 border-rose-200',
+        keywords: ['নষ্ট', 'ভাঙ্গা', 'চেঞ্জ', 'রিটার্ন', 'ওয়ারেন্টি', 'গ্যারান্টি', 'warranty', 'return'],
+        template: 'ডেলিভারি ম্যানের সামনে পণ্য চেক করে নিতে পারবেন এবং থাকছে {bonus}।'
+      },
+      {
+        id: 'location',
+        label: '📍 শোরুম (Location)',
+        badgeColor: 'bg-purple-50 text-purple-800 border-purple-200',
+        keywords: ['কোথায়', 'দোকান', 'শোরুম', 'ঠিকানা', 'লোকেশন', 'location', 'shop', 'address'],
+        template: 'আমাদের ডিসপ্লে সেন্টার মিরপুর-১০, ঢাকা। অনলাইনে অর্ডার করলে সারাদেশে ঘরে বসেই ডেলিভারি পাবেন।'
+      }
+    ];
+
+    // Negative / Urgent Support keywords
+    const urgentNegativeKeywords = ['লেট', 'দেরি', 'বাজে', 'ফালতু', 'প্রতারণা', 'ধোঁকা', 'পেলাম না', 'রিসিভ করে না', 'ফোন ধরে না', 'স্ক্যাম', 'খারাপ'];
+
+    let productState = JSON.parse(JSON.stringify(defaultProductState));
+    let rules = JSON.parse(JSON.stringify(initialRules));
+    let isMobilePreview = false;
+
+    // Load saved settings from localStorage safely
+    function loadSavedState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.productState) productState = { ...defaultProductState, ...parsed.productState };
+          if (Array.isArray(parsed.rules) && parsed.rules.length > 0) rules = parsed.rules;
+        }
+      } catch (e) {
+        // Ignore storage errors in sandboxed frames
+      }
+    }
+
+    function saveCurrentState(toastMessage) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ productState, rules }));
+      } catch (e) {
+        // Ignore storage errors
+      }
+      if (toastMessage) showToast(toastMessage);
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('saveToast');
+      const text = document.getElementById('saveToastText');
+      if (!toast || !text) return;
+      text.textContent = msg;
+      toast.classList.remove('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2200);
+    }
+
+    function fillPlaceholders(templateStr, customerName) {
+      const cleanName = (customerName || 'ভাইয়া/আপু').trim();
+      return templateStr
+        .replace(/\{name\}/g, cleanName)
+        .replace(/\{product\}/g, productState.name)
+        .replace(/\{price\}/g, productState.price)
+        .replace(/\{stock\}/g, productState.stock)
+        .replace(/\{insideDhaka\}/g, productState.insideDhaka)
+        .replace(/\{outsideDhaka\}/g, productState.outsideDhaka)
+        .replace(/\{bonus\}/g, productState.bonus);
+    }
+
+    // --- TONE FORMATTER ENGINE ---
+    function wrapWithTone(coreMessage, customerName, isUrgentSupport = false) {
+      const cleanName = (customerName || 'ভাইয়া/আপু').trim();
+
+      if (isUrgentSupport) {
+        return `প্রিয় ${cleanName}, আপনার সাময়িক অসুবিধার জন্য আমরা আন্তরিকভাবে দুঃখিত! 🙏 অনুগ্রহ করে আপনার অর্ডার বা মোবাইল নম্বরটি আমাদের ইনবক্সে দিন, আমাদের সাপোর্ট টিম এখনই বিষয়টি অগ্রাধিকার ভিত্তিতে সমাধান করছে।`;
+      }
+
+      if (productState.tone === 'formal') {
+        return `সম্মানিত ${cleanName}, আপনার কমেন্টের জন্য ধন্যবাদ। ${coreMessage} বিস্তারিত তথ্যের জন্য আমাদের পেজে মেসেজ দেওয়ার অনুরোধ করা হচ্ছে।`;
+      }
+      if (productState.tone === 'sales') {
+        return `হ্যালো ${cleanName}! 🔥 দারুণ খবর—${coreMessage} স্টক শেষ হওয়ার আগেই আপনার অর্ডারটি কনফার্ম করতে এখনই আমাদের ইনবক্স করুন! ⚡`;
+      }
+      return `প্রিয় ${cleanName}, অনেক ধন্যবাদ কমেন্ট করার জন্য! 😊 ${coreMessage} যেকোনো প্রয়োজনে আমাদের ইনবক্স করুন! 💙`;
+    }
+
+    // --- BUILD AUTO-INBOX (PRIVATE DM) MESSAGE ---
+    function buildPrivateDm(customerName, matchedRuleIds, isUrgentSupport) {
+      const cleanName = (customerName || 'ভাইয়া/আপু').trim();
+      if (isUrgentSupport) {
+        return `হ্যালো ${cleanName}, আপনার কমেন্টটি আমাদের নজরে এসেছে। অনুগ্রহ করে আপনার মোবাইল নম্বরটি এখানে রিপ্লাই দিন, আমাদের কাস্টমার কেয়ার প্রতিনিধি ৫ মিনিটের মধ্যে কল করছেন।`;
+      }
+      return `সালাম ${cleanName}! 🌟 আপনার কমেন্টের প্রেক্ষিতে জানাচ্ছি—আমাদের "${productState.name}"-এর অফার প্রাইস ${productState.price} (${productState.stock})। অর্ডার কনফার্ম করতে আপনার নাম, পূর্ণ ঠিকানা ও মোবাইল নম্বরটি এই মেসেজের রিপ্লাইতে লিখে পাঠান! 🛍️`;
+    }
+
+    // --- STEP 3 MULTI-INTENT & SENTIMENT ANALYZER ---
+    function analyzeComment(commentText, customerName) {
+      const normalized = commentText.toLowerCase().trim();
+
+      // 1. Check urgent/angry sentiment first
+      for (const negKw of urgentNegativeKeywords) {
+        if (normalized.includes(negKw.toLowerCase())) {
+          return {
+            intentLabel: '🚨 জরুরি সাপোর্ট (Urgent Support)',
+            badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
+            matchedKeyword: negKw,
+            reply: wrapWithTone('', customerName, true),
+            dmText: buildPrivateDm(customerName, ['support'], true)
+          };
+        }
+      }
+
+      // 2. Collect ALL matching rules (Multi-Question Detection)
+      const matchedRules = [];
+      const matchedKws = [];
+
+      for (const rule of rules) {
+        for (const kw of rule.keywords) {
+          if (normalized.includes(kw.toLowerCase())) {
+            matchedRules.push(rule);
+            matchedKws.push(kw);
+            break; // Move to next rule category once this category matched
+          }
+        }
+      }
+
+      if (matchedRules.length > 0) {
+        const combinedCore = matchedRules
+          .map(r => fillPlaceholders(r.template, customerName))
+          .join(' এছাড়া, ');
+
+        const labelText = matchedRules.length > 1
+          ? `✨ মাল্টি-প্রশ্ন (${matchedRules.length}টি বিষয়)`
+          : matchedRules[0].label;
+
+        const badgeColor = matchedRules.length > 1
+          ? 'bg-purple-50 text-purple-800 border-purple-200'
+          : matchedRules[0].badgeColor;
+
+        return {
+          intentLabel: labelText,
+          badgeColor,
+          matchedKeyword: matchedKws.join(' + '),
+          reply: wrapWithTone(combinedCore, customerName, false),
+          dmText: buildPrivateDm(customerName, matchedRules.map(r => r.id), false)
+        };
+      }
+
+      // 3. Fallback general comment
+      const fallbackCore = fillPlaceholders('আমাদের {product} সম্পর্কে আগ্রহের জন্য ধন্যবাদ! আমাদের একজন প্রতিনিধি দ্রুত আপনার সাথে যোগাযোগ করবেন।', customerName);
+      return {
+        intentLabel: '💬 সাধারণ কমেন্ট (General)',
+        badgeColor: 'bg-slate-100 text-slate-700 border-slate-200',
+        matchedKeyword: 'সাধারণ শুভেচ্ছা',
+        reply: wrapWithTone(fallbackCore, customerName, false),
+        dmText: buildPrivateDm(customerName, [], false)
+      };
+    }
+
+    // Initial Comments Feed
+    let comments = [];
+
+    function seedInitialReplies() {
+      const sampleSeeds = [
+        {
+          id: 201,
+          author: 'রাশেদুল ইসলাম',
+          time: '২ মিনিট আগে',
+          text: 'ভাই এটার দাম কত আর ঢাকার বাইরে ডেলিভারি চার্জ কত?'
+        },
+        {
+          id: 202,
+          author: 'সাদিয়া আফরিন',
+          time: '১ মিনিট আগে',
+          text: 'প্রোডাক্টটা স্টকে আছে কি? কালার কি কি?'
+        },
+        {
+          id: 203,
+          author: 'তানভীর আহমেদ',
+          time: 'এইমাত্র',
+          text: 'ভাই এটার দাম কত? Price plz'
+        }
+      ];
+
+      comments = sampleSeeds.map(item => {
+        const res = analyzeComment(item.text, item.author);
+        return {
+          ...item,
+          intentLabel: res.intentLabel,
+          badgeColor: res.badgeColor,
+          matchedKeyword: res.matchedKeyword,
+          toneUsed: getToneLabel(productState.tone),
+          reply: res.reply,
+          dmText: res.dmText
+        };
+      });
+    }
+
+    function getToneLabel(toneKey) {
+      if (toneKey === 'formal') return '👔 ফরমাল';
+      if (toneKey === 'sales') return '🔥 সেলস টোন';
+      return '😊 বন্ধুসুলভ';
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // --- SYNC INPUT FIELDS & POST PREVIEW ---
+    function syncInputsFromState() {
+      document.getElementById('prodName').value = productState.name;
+      document.getElementById('prodPrice').value = productState.price;
+      document.getElementById('prodStock').value = productState.stock;
+      document.getElementById('prodInsideDhaka').value = productState.insideDhaka;
+      document.getElementById('prodOutsideDhaka').value = productState.outsideDhaka;
+      document.getElementById('prodBonus').value = productState.bonus;
+
+      document.querySelectorAll('input[name="botTone"]').forEach(r => {
+        r.checked = (r.value === productState.tone);
+      });
+      document.querySelectorAll('.tone-card').forEach(card => {
+        if (card.getAttribute('data-tone-card') === productState.tone) {
+          card.className = 'flex items-start gap-3 p-3 rounded-xl border border-blue-500 bg-blue-50/40 cursor-pointer transition tone-card';
+        } else {
+          card.className = 'flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition tone-card';
+        }
+      });
+    }
+
+    function syncProductUI() {
+      document.getElementById('postProductTitle').textContent = productState.name;
+      document.getElementById('postPriceBadge').textContent = `অফার প্রাইস: ${productState.price}`;
+      document.getElementById('postStockBadge').textContent = productState.stock;
+      document.getElementById('postProductOffer').textContent =
+        `সারাদেশে হোম ডেলিভারি (ঢাকায় ${productState.insideDhaka}, ঢাকার বাইরে ${productState.outsideDhaka})। সাথে থাকছে ${productState.bonus}!`;
+
+      const toneLabel = getToneLabel(productState.tone);
+      document.getElementById('activeToneChip').textContent = `টোন: ${toneLabel}`;
+
+      const previewEl = document.getElementById('toneLivePreviewText');
+      if (previewEl && rules[0]) {
+        const sampleCore = fillPlaceholders(rules[0].template, 'আরিফ হোসেন');
+        previewEl.textContent = `"${wrapWithTone(sampleCore, 'আরিফ হোসেন', false)}"`;
+      }
+    }
+
+    // --- RENDER COMMENTS FEED ---
+    function renderComments() {
+      const listEl = document.getElementById('commentsList');
+      const counterEl = document.getElementById('replyCounter');
+      const dmCounterEl = document.getElementById('dmCounter');
+
+      const repliedCount = comments.filter(c => c.reply).length;
+      const dmCount = comments.filter(c => c.dmText).length;
+      counterEl.textContent = String(repliedCount);
+      dmCounterEl.textContent = String(dmCount);
+
+      listEl.innerHTML = comments.map(item => `
+        <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80 space-y-2.5">
+          <!-- Customer Comment -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-start gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
+                ${escapeHtml(item.author.charAt(0))}
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-semibold text-xs text-slate-900">${escapeHtml(item.author)}</span>
+                  <span class="text-[11px] text-slate-400">${escapeHtml(item.time)}</span>
+                </div>
+                <p class="text-sm text-slate-800 mt-0.5">${escapeHtml(item.text)}</p>
+              </div>
+            </div>
+            <span class="text-[11px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${item.badgeColor}">
+              ${escapeHtml(item.intentLabel)}
+            </span>
+          </div>
+
+          <!-- Bot Public Auto-Reply -->
+          ${item.reply ? `
+            <div class="ml-8 bg-white rounded-xl p-3 border border-blue-100 shadow-sm">
+              <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">M</span>
+                  <span class="font-semibold text-xs text-blue-700">Moni Tech & Gadget BD</span>
+                  <span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">শনাক্ত শব্দ: "${escapeHtml(item.matchedKeyword)}"</span>
+                  <span class="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-medium">${escapeHtml(item.toneUsed || getToneLabel(productState.tone))}</span>
+                </div>
+              </div>
+              <p class="text-xs text-slate-700 leading-relaxed">${escapeHtml(item.reply)}</p>
+            </div>
+          ` : `
+            <div class="ml-8 flex items-center justify-between bg-amber-50/70 border border-amber-200/80 rounded-lg px-3 py-2">
+              <span class="text-xs text-amber-800">অটো-রিপ্লাই বন্ধ থাকায় উত্তর দেওয়া হয়নি।</span>
+              <button type="button" data-reply-now="${item.id}" class="reply-now-btn text-xs font-semibold text-blue-600 hover:underline">
+                এখনই রিপ্লাই দিন
+              </button>
+            </div>
+          `}
+
+          <!-- Simulated Private Inbox DM Card -->
+          ${item.dmText ? `
+            <div class="ml-8 bg-indigo-950 text-indigo-100 rounded-xl p-2.5 border border-indigo-800 flex items-start gap-2.5">
+              <span class="text-xs bg-indigo-700 text-white px-2 py-0.5 rounded font-semibold shrink-0 mt-0.5">💬 অটো-ইনবক্স (DM)</span>
+              <p class="text-[11px] text-indigo-100 leading-relaxed">${escapeHtml(item.dmText)}</p>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.reply-now-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.getAttribute('data-reply-now'));
+          const target = comments.find(c => c.id === id);
+          if (target) {
+            const analysis = analyzeComment(target.text, target.author);
+            target.intentLabel = analysis.intentLabel;
+            target.badgeColor = analysis.badgeColor;
+            target.matchedKeyword = analysis.matchedKeyword;
+            target.toneUsed = getToneLabel(productState.tone);
+            target.reply = analysis.reply;
+            if (document.getElementById('autoDmToggle').checked) {
+              target.dmText = analysis.dmText;
+            }
+            renderComments();
+          }
+        });
+      });
+    }
+
+    // --- RENDER RULES LIST ---
+    function renderRules() {
+      const container = document.getElementById('rulesContainer');
+      const countBadge = document.getElementById('ruleCountBadge');
+      countBadge.textContent = `${rules.length}টি রুল সক্রিয়`;
+
+      container.innerHTML = rules.map((rule, idx) => `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2 py-0.5 rounded border ${rule.badgeColor}">${escapeHtml(rule.label)}</span>
+          </div>
+          <div class="text-[11px] text-slate-500">
+            <span class="font-semibold text-slate-600">শনাক্তকারী শব্দ:</span> ${escapeHtml(rule.keywords.join(', '))}
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-slate-600 mb-1">টেমপ্লেট:</label>
+            <textarea
+              data-rule-index="${idx}"
+              rows="2"
+              class="rule-reply-input w-full text-xs rounded-lg border border-slate-300 p-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >${escapeHtml(rule.template)}</textarea>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.rule-reply-input').forEach(textarea => {
+        textarea.addEventListener('input', (e) => {
+          const idx = Number(e.target.getAttribute('data-rule-index'));
+          if (rules[idx]) {
+            rules[idx].template = e.target.value;
+            syncProductUI();
+            saveCurrentState('রুল আপডেট ও সেভ হয়েছে');
+          }
+        });
+      });
+    }
+
+    // --- ADD NEW COMMENT ---
+    function addNewComment(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
+      const customerName = document.getElementById('customerNameInput').value.trim() || 'কাস্টমার';
+      const autoReplyOn = document.getElementById('autoReplyToggle').checked;
+      const autoDmOn = document.getElementById('autoDmToggle').checked;
+      const analysis = analyzeComment(trimmed, customerName);
+
+      const badge = document.getElementById('lastDetectedBadge');
+      badge.textContent = `শনাক্ত: ${analysis.intentLabel}`;
+      badge.className = `text-[11px] font-semibold px-2 py-0.5 rounded-md border ${analysis.badgeColor}`;
+
+      const newComment = {
+        id: Date.now(),
+        author: customerName,
+        time: 'এইমাত্র',
+        text: trimmed,
+        intentLabel: analysis.intentLabel,
+        badgeColor: analysis.badgeColor,
+        matchedKeyword: analysis.matchedKeyword,
+        toneUsed: getToneLabel(productState.tone),
+        reply: autoReplyOn ? analysis.reply : null,
+        dmText: (autoReplyOn && autoDmOn) ? analysis.dmText : null
+      };
+
+      comments.unshift(newComment);
+      renderComments();
+    }
+
+    // --- INIT EVENT LISTENERS ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedState();
+      syncInputsFromState();
+      seedInitialReplies();
+      syncProductUI();
+      renderRules();
+      renderComments();
+
+      // Toggle Mobile Phone Frame Preview
+      const mobileBtn = document.getElementById('toggleMobileViewBtn');
+      const rootWrapper = document.getElementById('appRootWrapper');
+      const leftCol = document.getElementById('leftCol');
+      const rightCol = document.getElementById('rightCol');
+
+      mobileBtn.addEventListener('click', () => {
+        isMobilePreview = !isMobilePreview;
+        if (isMobilePreview) {
+          rootWrapper.classList.add('mobile-frame-mode');
+          leftCol.className = 'col-span-12 space-y-5';
+          rightCol.className = 'col-span-12 space-y-5';
+          mobileBtn.innerHTML = '🖥️ <span>ডেস্কটপ ভিউতে ফিরুন</span>';
+          mobileBtn.className = 'text-xs font-semibold bg-blue-600 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1.5';
+        } else {
+          rootWrapper.classList.remove('mobile-frame-mode');
+          leftCol.className = 'lg:col-span-7 space-y-5';
+          rightCol.className = 'lg:col-span-5 space-y-5';
+          mobileBtn.innerHTML = '📱 <span>মোবাইল অ্যাপ ভিউ</span>';
+          mobileBtn.className = 'text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5';
+        }
+      });
+
+      // Right sidebar tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.className = 'tab-btn py-2.5 px-1.5 border-b-2 border-transparent text-slate-600 hover:text-slate-900';
+          });
+          btn.className = 'tab-btn py-2.5 px-1.5 border-b-2 border-blue-600 text-blue-600 bg-white';
+
+          document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+          document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+        });
+      });
+
+      // Product Knowledge inputs live binding + localStorage persistence
+      const bindProductField = (id, key) => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', (e) => {
+          productState[key] = e.target.value;
+          syncProductUI();
+          saveCurrentState('পণ্যের তথ্য অটো-সেভ হয়েছে');
+        });
+      };
+      bindProductField('prodName', 'name');
+      bindProductField('prodPrice', 'price');
+      bindProductField('prodStock', 'stock');
+      bindProductField('prodInsideDhaka', 'insideDhaka');
+      bindProductField('prodOutsideDhaka', 'outsideDhaka');
+      bindProductField('prodBonus', 'bonus');
+
+      // Tone selector radio buttons
+      document.querySelectorAll('input[name="botTone"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          productState.tone = e.target.value;
+          syncInputsFromState();
+          syncProductUI();
+          saveCurrentState('টোন সেভ হয়েছে');
+        });
+      });
+
+      // Add Custom Rule Form
+      document.getElementById('addRuleForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const label = document.getElementById('newRuleLabel').value.trim();
+        const kwRaw = document.getElementById('newRuleKeywords').value.trim();
+        const replyTpl = document.getElementById('newRuleReply').value.trim();
+
+        const keywords = kwRaw.split(',').map(k => k.trim()).filter(Boolean);
+        if (!label || keywords.length === 0 || !replyTpl) return;
+
+        rules.unshift({
+          id: 'custom_' + Date.now(),
+          label,
+          badgeColor: 'bg-teal-50 text-teal-800 border-teal-200',
+          keywords,
+          template: replyTpl
+        });
+
+        document.getElementById('newRuleLabel').value = '';
+        document.getElementById('newRuleKeywords').value = '';
+        document.getElementById('newRuleReply').value = '';
+        renderRules();
+        saveCurrentState('নতুন কাস্টম রুল সেভ হয়েছে!');
+      });
+
+      // Build Live Webhook Server Code from current user rules & product state
+      function updateWebhookCodePreview() {
+        const verifyTok = document.getElementById('fbVerifyTokenInput').value.trim() || 'moni_verify_token';
+        const pageTok = document.getElementById('fbPageTokenInput').value.trim() || 'YOUR_PAGE_ACCESS_TOKEN';
+        const codeEl = document.getElementById('webhookCodeOutput');
+        if (!codeEl) return;
+
+        const compactRules = rules.map(r => ({
+          id: r.id,
+          keywords: r.keywords,
+          replySample: wrapWithTone(fillPlaceholders(r.template, 'সম্মানিত ক্রেতা'), 'সম্মানিত ক্রেতা', false)
+        }));
+
+        const lines = [
+          "// File: api/webhook.js (Deploy on Vercel)",
+          "const VERIFY_TOKEN = " + JSON.stringify(verifyTok) + ";",
+          "const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_TOKEN || " + JSON.stringify(pageTok) + ";",
+          "const RULES = " + JSON.stringify(compactRules, null, 2) + ";",
+          "",
+          "export default async function handler(req, res) {",
+          "  if (req.method === 'GET') {",
+          "    if (req.query['hub.verify_token'] === VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);",
+          "    return res.status(403).send('Forbidden');",
+          "  }",
+          "  if (req.method === 'POST') {",
+          "    const change = req.body?.entry?.[0]?.changes?.[0]?.value;",
+          "    if (change?.item === 'comment' && change?.verb === 'add') {",
+          "      const text = (change.message || '').toLowerCase();",
+          "      const matched = RULES.filter(r => r.keywords.some(k => text.includes(k.toLowerCase())));",
+          "      const replyText = matched.length ? matched.map(m => m.replySample).join(' ') : 'আপনার কমেন্টের জন্য ধন্যবাদ! বিস্তারিত জানতে ইনবক্স করুন।';",
+          "      try {",
+          "        const graphEndpoint = 'https://graph.facebook.com/v19.0/' + change.comment_id + '/comments';",
+          "        await postToGraphApi(graphEndpoint, PAGE_ACCESS_TOKEN, replyText);",
+          "      } catch (err) { console.error(err); }",
+          "    }",
+          "    return res.status(200).send('EVENT_RECEIVED');",
+          "  }",
+          "}"
+        ];
+        codeEl.textContent = lines.join("\n");
+      }
+
+      updateWebhookCodePreview();
+
+      document.getElementById('generateWebhookBtn').addEventListener('click', () => {
+        updateWebhookCodePreview();
+        showToast('আপনার বর্তমান রুলস দিয়ে সার্ভার কোড আপডেট হয়েছে!');
+      });
+
+      document.getElementById('fbVerifyTokenInput').addEventListener('input', updateWebhookCodePreview);
+      document.getElementById('fbPageTokenInput').addEventListener('input', updateWebhookCodePreview);
+
+      document.getElementById('copyWebhookBtn').addEventListener('click', () => {
+        updateWebhookCodePreview();
+        const codeText = document.getElementById('webhookCodeOutput').textContent;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(codeText);
+          }
+        } catch (e) {}
+        document.getElementById('webhookCopyStatus').textContent = 'কপি হয়েছে! ✓';
+        showToast('সার্ভার কোড কপি হয়েছে!');
+      });
+
+      // Export Config JSON
+      document.getElementById('exportConfigBtn').addEventListener('click', () => {
+        const box = document.getElementById('exportedJsonBox');
+        const jsonStr = JSON.stringify({ productState, rules }, null, 2);
+        box.textContent = jsonStr;
+        box.classList.remove('hidden');
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(jsonStr);
+          }
+        } catch (err) {
+          // Ignore clipboard errors
+        }
+        showToast('কনফিগারেশন JSON তৈরি হয়েছে!');
+      });
+
+      // Reset Saved Config
+      document.getElementById('resetSavedConfigBtn').addEventListener('click', () => {
+        productState = JSON.parse(JSON.stringify(defaultProductState));
+        rules = JSON.parse(JSON.stringify(initialRules));
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+        syncInputsFromState();
+        syncProductUI();
+        renderRules();
+        seedInitialReplies();
+        renderComments();
+        showToast('ডিফল্ট সেটিংসে রিসেট করা হয়েছে');
+      });
+
+      // Comment form submission
+      const form = document.getElementById('commentForm');
+      const input = document.getElementById('commentInput');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        addNewComment(input.value);
+        input.value = '';
+      });
+
+      // Quick sample buttons
+      document.querySelectorAll('.sample-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          addNewComment(btn.getAttribute('data-sample'));
+        });
+      });
+
+      // Reset feed
+      document.getElementById('clearFeedBtn').addEventListener('click', () => {
+        seedInitialReplies();
+        renderComments();
+      });
+    });
+  </script>
+</body>
+</html>
